@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { SpiralAnimation } from '@/components/ui/spiral-animation';
 import { useNavigate } from 'react-router-dom';
 import { StarButton } from '@/components/ui/star-button';
-import { VideoPlayerModal } from '@/components/VideoPlayerModal';
+import { ProjectDetailModal } from '@/components/ProjectDetailModal';
 
 /** Ссылка на канал Rutube или ID канала (из ссылки https://rutube.ru/video/person/123456/ → 123456) */
 const RUTUBE_CHANNEL_URL_OR_ID = (import.meta.env.VITE_RUTUBE_CHANNEL_URL || import.meta.env.VITE_RUTUBE_CHANNEL_ID || '').trim();
@@ -187,11 +187,11 @@ export function Portfolio() {
                   </button>
                 ))}
               </div>
-              <VideoPlayerModal
+              <ProjectDetailModal
                 isOpen={!!playingVideo}
                 onClose={() => setPlayingVideo(null)}
-                embedUrl={playingVideo ? `${(playingVideo.embed_url || '').replace(/\/?$/, '')}?autoplay=1` : ''}
-                title={playingVideo?.title ?? ''}
+                video={playingVideo}
+                formatDuration={formatDuration}
               />
             </>
           )}
