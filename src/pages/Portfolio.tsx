@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { SpiralAnimation } from '@/components/ui/spiral-animation';
 import { useNavigate } from 'react-router-dom';
 import { StarButton } from '@/components/ui/star-button';
+import { VideoPlayerModal } from '@/components/VideoPlayerModal';
 
 /** Ссылка на канал Rutube или ID канала (из ссылки https://rutube.ru/video/person/123456/ → 123456) */
 const RUTUBE_CHANNEL_URL_OR_ID = (import.meta.env.VITE_RUTUBE_CHANNEL_URL || import.meta.env.VITE_RUTUBE_CHANNEL_ID || '').trim();
@@ -66,6 +67,7 @@ export function Portfolio() {
   const [videos, setVideos] = useState<RutubeVideo[]>([]);
   const [loading, setLoading] = useState(!!(RUTUBE_CHANNEL_ID || RUTUBE_PLAYLIST_ID));
   const [useFallback, setUseFallback] = useState(!(RUTUBE_CHANNEL_ID || RUTUBE_PLAYLIST_ID));
+  const [playingVideo, setPlayingVideo] = useState<RutubeVideo | null>(null);
 
   useEffect(() => {
     const source = RUTUBE_CHANNEL_ID ? 'channel' : RUTUBE_PLAYLIST_ID ? 'playlist' : null;
@@ -137,9 +139,7 @@ export function Portfolio() {
           </h1>
           {hasSource && (
             <p className="text-white/70 text-center mb-16 max-w-2xl mx-auto">
-              {RUTUBE_CHANNEL_ID
-                ? 'Видео подгружаются из вашего канала Rutube.'
-                : 'Видео подгружаются из плейлиста Rutube.'}
+              Видео из портфолио
             </p>
           )}
 
@@ -150,45 +150,50 @@ export function Portfolio() {
           )}
 
           {!loading && !useFallback && videos.length > 0 && (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-              {videos.map((video) => (
-                <div
-                  key={video.id}
-                  className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-white/30 transition-all hover:scale-[1.02] flex flex-col"
-                >
-                  <div className="rounded-xl overflow-hidden mb-4 aspect-video bg-black">
-                    <iframe
-                      src={(video.embed_url || '').replace(/\/?$/, '/')}
-                      title={video.title}
-                      allow="clipboard-write; autoplay; fullscreen; picture-in-picture"
-                      allowFullScreen
-                      className="w-full h-full"
-                    />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-3 line-clamp-2">
-                    {video.title}
-                  </h3>
-                  <p className="text-white/70 mb-4 flex-1 line-clamp-3 text-sm leading-relaxed">
-                    {video.description || 'Без описания'}
-                  </p>
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    {video.duration != null && (
-                      <span className="text-white/50 text-sm">
-                        {formatDuration(video.duration)}
-                      </span>
-                    )}
-                    <a
-                      href={video.video_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-white/70 hover:text-white text-sm"
-                    >
-                      Смотреть на Rutube →
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+                {videos.map((video) => (
+                  <button
+                    key={video.id}
+                    type="button"
+                    onClick={() => setPlayingVideo(video)}
+                    className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-white/30 transition-all hover:scale-[1.02] flex flex-col text-left group"
+                  >
+                    <div className="rounded-xl overflow-hidden mb-4 aspect-video bg-black relative">
+                      <img
+                        src={video.thumbnail_url}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
+                        <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <svg viewBox="0 0 24 24" className="w-8 h-8 text-white ml-1" fill="currentColor">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+                      {video.duration != null && (
+                        <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-black/70 text-white/90 text-xs">
+                          {formatDuration(video.duration)}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3 line-clamp-2">
+                      {video.title}
+                    </h3>
+                    <p className="text-white/70 flex-1 line-clamp-3 text-sm leading-relaxed">
+                      {video.description || 'Без описания'}
+                    </p>
+                  </button>
+                ))}
+              </div>
+              <VideoPlayerModal
+                isOpen={!!playingVideo}
+                onClose={() => setPlayingVideo(null)}
+                embedUrl={playingVideo ? `${(playingVideo.embed_url || '').replace(/\/?$/, '')}?autoplay=1` : ''}
+                title={playingVideo?.title ?? ''}
+              />
+            </>
           )}
 
           <div className="text-center">
