@@ -9,8 +9,9 @@ function App() {
     e.preventDefault();
   };
 
+  const basename = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || '/';
   return (
-    <Router>
+    <Router basename={basename}>
       <div
         className="min-h-screen bg-black"
         onCopy={preventCopy}
